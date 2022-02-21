@@ -18,6 +18,14 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 implementation(projects.common)
+                implementation(projects.common.retrofit)
+                implementation(projects.common.okhttp)
+                implementation("androidx.paging:paging-runtime-ktx:${Versions.Androidx.paging}")
+                implementation("androidx.paging:paging-compose:${Versions.Androidx.pagingCompose}")
+                api("androidx.room:room-runtime:${Versions.Androidx.room}")
+                api("androidx.room:room-ktx:${Versions.Androidx.room}")
+                kspAndroid("androidx.room:room-compiler:${Versions.Androidx.room}")
+                implementation("androidx.room:room-paging:${Versions.Androidx.room}")
             }
         }
         val androidTest by getting {

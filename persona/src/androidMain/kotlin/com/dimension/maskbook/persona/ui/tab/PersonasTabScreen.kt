@@ -83,6 +83,9 @@ class PersonasTabScreen : TabScreen {
                     )
                 }
             },
+            onNextIdClicked = {
+                rootNavController.navigate(PersonaRoute.NextId.Home)
+            },
         )
     }
 }

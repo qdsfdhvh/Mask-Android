@@ -46,4 +46,11 @@ expect object PersonaRoute {
             socialName: String?
         ): String
     }
+    object NextId {
+        val Home: String
+        val Add: String
+        object SendRequest {
+            operator fun invoke(input: String, platform: String): String
+        }
+    }
 }

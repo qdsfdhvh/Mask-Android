@@ -23,29 +23,37 @@ package com.dimension.maskbook.persona
 import android.content.Context
 import android.net.Uri
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavType
 import androidx.navigation.compose.dialog
 import androidx.navigation.navArgument
+import androidx.room.Room
 import com.dimension.maskbook.common.ModuleSetup
 import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.retrofit.retrofit
 import com.dimension.maskbook.common.route.CommonRoute
 import com.dimension.maskbook.common.route.Deeplinks
 import com.dimension.maskbook.common.ui.tab.TabScreen
+import com.dimension.maskbook.persona.db.PersonaDatabase
 import com.dimension.maskbook.persona.export.PersonaServices
+import com.dimension.maskbook.persona.export.model.Platform
 import com.dimension.maskbook.persona.export.model.PlatformType
 import com.dimension.maskbook.persona.repository.IContactsRepository
 import com.dimension.maskbook.persona.repository.IPersonaRepository
 import com.dimension.maskbook.persona.repository.PersonaRepository
 import com.dimension.maskbook.persona.repository.personaDataStore
 import com.dimension.maskbook.persona.route.PersonaRoute
+import com.dimension.maskbook.persona.services.NextDotIdService
 import com.dimension.maskbook.persona.ui.scenes.ExportPrivateKeyScene
 import com.dimension.maskbook.persona.ui.scenes.LogoutDialog
 import com.dimension.maskbook.persona.ui.scenes.PersonaMenuScene
 import com.dimension.maskbook.persona.ui.scenes.RenamePersonaModal
 import com.dimension.maskbook.persona.ui.scenes.SwitchPersonaModal
+import com.dimension.maskbook.persona.ui.scenes.nextid.NextIdAddModal
+import com.dimension.maskbook.persona.ui.scenes.nextid.NextIdHomeScene
 import com.dimension.maskbook.persona.ui.scenes.social.DisconnectSocialDialog
 import com.dimension.maskbook.persona.ui.scenes.social.SelectPlatformModal
 import com.dimension.maskbook.persona.ui.tab.PersonasTabScreen
@@ -54,6 +62,9 @@ import com.dimension.maskbook.persona.viewmodel.PersonaViewModel
 import com.dimension.maskbook.persona.viewmodel.RenamePersonaViewModel
 import com.dimension.maskbook.persona.viewmodel.SwitchPersonaViewModel
 import com.dimension.maskbook.persona.viewmodel.contacts.ContactsViewModel
+import com.dimension.maskbook.persona.viewmodel.nextid.NextIdAddViewModel
+import com.dimension.maskbook.persona.viewmodel.nextid.NextIdHomeViewModel
+import com.dimension.maskbook.persona.viewmodel.nextid.NextIdSendRequestViewModel
 import com.dimension.maskbook.persona.viewmodel.post.PostViewModel
 import com.dimension.maskbook.persona.viewmodel.social.DisconnectSocialViewModel
 import com.dimension.maskbook.persona.viewmodel.social.FaceBookConnectSocialViewModel
@@ -64,6 +75,8 @@ import com.dimension.maskbook.setting.export.SettingServices
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.navigation.material.bottomSheet
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asExecutor
 import org.koin.androidx.compose.get
 import org.koin.androidx.compose.getViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -225,15 +238,66 @@ object PersonaSetup : ModuleSetup {
                 )
             }
         }
+        composable(PersonaRoute.NextId.Home) {
+            val viewModel = getViewModel<NextIdHomeViewModel>()
+            val items by viewModel.source.collectAsState(initial = emptyList())
+            NextIdHomeScene(
+                onBack = {
+                    navController.popBackStack()
+                },
+                onAdd = {
+                    navController.navigate(PersonaRoute.NextId.Add)
+                },
+                items = items,
+            )
+        }
+        bottomSheet(PersonaRoute.NextId.Add) {
+            val viewModel = getViewModel<NextIdAddViewModel>()
+            val selected by viewModel.selected.collectAsState()
+            val input by viewModel.input.collectAsState()
+            NextIdAddModal(
+                selected = selected,
+                input = input,
+                setInput = {
+                    viewModel.setInput(it)
+                },
+                setSelected = {
+                    viewModel.setSelected(it)
+                },
+                onDone = {
+                    navController.navigate(PersonaRoute.NextId.SendRequest(input, selected.name))
+                },
+            )
+        }
+        bottomSheet(
+            PersonaRoute.NextId.SendRequest.path,
+            arguments = listOf(
+                navArgument("input") { type = NavType.StringType },
+                navArgument("platform") { type = NavType.StringType },
+            )
+        ) {
+            val input = it.arguments?.getString("input")
+            val platform = it.arguments?.getString("platform")?.let { Platform.valueOf(it) }
+            val viewModel = getViewModel<NextIdSendRequestViewModel> {
+                parametersOf(input, platform)
+            }
+        }
     }
 
     override fun dependencyInject() = module {
+        single {
+            Room.databaseBuilder(get(), PersonaDatabase::class.java, "maskbook_persona")
+                .setQueryExecutor(Dispatchers.IO.asExecutor())
+                .setTransactionExecutor(Dispatchers.IO.asExecutor())
+                .build()
+        }
         single {
             PersonaRepository(get<Context>().personaDataStore, get(), get())
         } binds arrayOf(
             IPersonaRepository::class,
             IContactsRepository::class
         )
+        single { retrofit<NextDotIdService>("https://proof-service.next.id/") }
 
         single<PersonaServices> { PersonaServicesImpl(get()) }
         single { PersonasTabScreen() } bind TabScreen::class
@@ -249,6 +313,9 @@ object PersonaSetup : ModuleSetup {
         viewModel { ExportPrivateKeyViewModel(get()) }
         viewModel { PostViewModel(get(), get()) }
         viewModel { ContactsViewModel(get(), get()) }
+        viewModel { NextIdHomeViewModel(get()) }
+        viewModel { NextIdAddViewModel() }
+        viewModel { (input: String, platform: Platform) -> NextIdSendRequestViewModel(input, platform) }
     }
 
     override fun onExtensionReady() {

@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
@@ -58,6 +59,7 @@ fun PersonaScene(
     onPersonaNameClick: () -> Unit,
     onAddSocialClick: (PersonaData, Network?) -> Unit,
     onRemoveSocialClick: (PersonaData, SocialData) -> Unit,
+    onNextIdClicked: () -> Unit,
 ) {
     val viewModel: PersonaViewModel = getViewModel()
     val currentPersona by viewModel.currentPersona.collectAsState()
@@ -99,6 +101,16 @@ fun PersonaScene(
                             Icons.Default.ChevronLeft,
                             contentDescription = null,
                             modifier = Modifier.rotate(-90f)
+                        )
+                    }
+                },
+                navigationIcon = {
+                    MaskIconCardButton(onClick = {
+                        onNextIdClicked.invoke()
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.AccountBox,
+                            contentDescription = null,
                         )
                     }
                 }
