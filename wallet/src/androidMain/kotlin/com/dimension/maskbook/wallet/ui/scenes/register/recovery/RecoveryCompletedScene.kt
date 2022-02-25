@@ -20,6 +20,7 @@
  */
 package com.dimension.maskbook.wallet.ui.scenes.register.recovery
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -31,6 +32,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavController
+import androidx.navigation.navOptions
+import com.dimension.maskbook.common.route.CommonRoute
+import com.dimension.maskbook.common.route.Deeplinks
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
 import com.dimension.maskbook.common.ui.widget.MaskScaffold
 import com.dimension.maskbook.common.ui.widget.MaskScene
 import com.dimension.maskbook.common.ui.widget.MaskTopAppBar
@@ -38,11 +47,17 @@ import com.dimension.maskbook.common.ui.widget.ScaffoldPadding
 import com.dimension.maskbook.common.ui.widget.button.MaskBackButton
 import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.wallet.R
+import com.dimension.maskbook.wallet.route.WalletRoute
 
+@NavGraphDestination(
+    route = WalletRoute.Register.Recovery.Complected,
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
 @Composable
 fun RecoveryComplectedScene(
-    onBack: () -> Unit,
-    onConfirm: () -> Unit,
+    navController: NavController,
+    @Back onBack: () -> Unit,
 ) {
     MaskScene {
         MaskScaffold(
@@ -72,7 +87,16 @@ fun RecoveryComplectedScene(
                 )
                 PrimaryButton(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = onConfirm
+                    onClick = {
+                        navController.navigate(
+                            Uri.parse(Deeplinks.Main.Home(CommonRoute.Main.Tabs.Persona)),
+                            navOptions {
+                                popUpTo(WalletRoute.Register.Init) {
+                                    inclusive = true
+                                }
+                            }
+                        )
+                    }
                 ) {
                     Text(text = stringResource(R.string.common_controls_confirm))
                 }

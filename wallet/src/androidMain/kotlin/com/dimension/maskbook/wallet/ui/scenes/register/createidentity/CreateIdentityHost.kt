@@ -20,6 +20,7 @@
  */
 package com.dimension.maskbook.wallet.ui.scenes.register.createidentity
 
+import android.net.Uri
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
@@ -32,12 +33,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavController
 import androidx.navigation.compose.dialog
+import androidx.navigation.navOptions
 import com.dimension.maskbook.common.ext.observeAsState
 import com.dimension.maskbook.common.navHostAnimationDurationMillis
+import com.dimension.maskbook.common.route.CommonRoute
+import com.dimension.maskbook.common.route.Deeplinks
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
+import com.dimension.maskbook.common.routeProcessor.annotations.Path
 import com.dimension.maskbook.common.ui.widget.MaskDialog
 import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.wallet.R
+import com.dimension.maskbook.wallet.route.WalletRoute
 import com.dimension.maskbook.wallet.ui.scenes.register.BackupIdentityScene
 import com.dimension.maskbook.wallet.viewmodel.register.CreateIdentityViewModel
 import com.google.accompanist.navigation.animation.AnimatedNavHost
@@ -46,12 +57,17 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.koin.androidx.compose.getViewModel
 import org.koin.core.parameter.parametersOf
 
+@NavGraphDestination(
+    route = WalletRoute.Register.CreateIdentity.path,
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun CreateIdentityHost(
-    personaName: String,
-    onDone: () -> Unit,
-    onBack: () -> Unit,
+    rootNavController: NavController,
+    @Path("personaName") personaName: String,
+    @Back onBack: () -> Unit,
 ) {
     val navController = rememberAnimatedNavController()
     val viewModel: CreateIdentityViewModel = getViewModel {
@@ -132,7 +148,15 @@ fun CreateIdentityHost(
                         modifier = Modifier.fillMaxWidth(),
                         onClick = {
                             viewModel.confirm()
-                            onDone.invoke()
+                            rootNavController.navigate(
+                                Uri.parse(Deeplinks.Main.Home(CommonRoute.Main.Tabs.Persona)),
+                                navOptions = navOptions {
+                                    launchSingleTop = true
+                                    popUpTo(CommonRoute.Main.Home) {
+                                        inclusive = false
+                                    }
+                                }
+                            )
                         },
                     ) {
                         Text(text = stringResource(R.string.common_controls_done))

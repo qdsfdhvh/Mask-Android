@@ -37,6 +37,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.dimension.maskbook.common.route.Deeplinks
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
 import com.dimension.maskbook.common.ui.widget.MaskInputField
 import com.dimension.maskbook.common.ui.widget.MaskScaffold
 import com.dimension.maskbook.common.ui.widget.MaskScene
@@ -45,11 +51,20 @@ import com.dimension.maskbook.common.ui.widget.ScaffoldPadding
 import com.dimension.maskbook.common.ui.widget.button.MaskBackButton
 import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.wallet.R
+import com.dimension.maskbook.wallet.route.WalletRoute
 
+@NavGraphDestination(
+    route = WalletRoute.Register.WelcomeCreatePersona,
+    deeplink = [
+        Deeplinks.Wallet.Register.WelcomeCreatePersona,
+    ],
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
 @Composable
 fun CreatePersonaScene(
-    onBack: () -> Unit,
-    onDone: (String) -> Unit,
+    navController: NavController,
+    @Back onBack: () -> Unit,
 ) {
     var name by remember { mutableStateOf("") }
     MaskScene {
@@ -87,7 +102,7 @@ fun CreatePersonaScene(
                     modifier = Modifier.fillMaxWidth(),
                     onClick = {
                         if (name.isNotBlank()) {
-                            onDone.invoke(name)
+                            navController.navigate(WalletRoute.Register.CreateIdentity(name))
                         }
                     },
                 ) {

@@ -54,7 +54,6 @@ import com.dimension.maskbook.wallet.repository.WalletContactRepository
 import com.dimension.maskbook.wallet.repository.WalletRepository
 import com.dimension.maskbook.wallet.repository.walletDataStore
 import com.dimension.maskbook.wallet.route.WalletRoute
-import com.dimension.maskbook.wallet.route.registerRoute
 import com.dimension.maskbook.wallet.route.walletsRoute
 import com.dimension.maskbook.wallet.services.WalletServices
 import com.dimension.maskbook.wallet.ui.scenes.generatedRoute
@@ -120,7 +119,6 @@ object WalletSetup : ModuleSetup {
     override fun NavGraphBuilder.route(navController: NavController, onFinish: () -> Unit) {
         generatedRoute(navController, onFinish = onFinish)
         walletsRoute(navController)
-        registerRoute(navController)
         bottomSheet(
             WalletRoute.BackUpPassword.path,
             arguments = listOf(

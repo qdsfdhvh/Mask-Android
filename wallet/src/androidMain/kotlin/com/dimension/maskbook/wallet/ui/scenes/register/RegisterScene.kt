@@ -20,6 +20,7 @@
  */
 package com.dimension.maskbook.wallet.ui.scenes.register
 
+import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -32,24 +33,62 @@ import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.navOptions
+import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.route.CommonRoute
+import com.dimension.maskbook.common.route.Deeplinks
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
 import com.dimension.maskbook.common.ui.widget.MaskScaffold
 import com.dimension.maskbook.common.ui.widget.MaskScene
 import com.dimension.maskbook.common.ui.widget.ScaffoldPadding
 import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.common.ui.widget.button.SecondaryButton
+import com.dimension.maskbook.persona.export.PersonaServices
 import com.dimension.maskbook.wallet.R
+import com.dimension.maskbook.wallet.route.WalletRoute
+import kotlinx.coroutines.flow.distinctUntilChanged
+import org.koin.androidx.compose.get
 
+@NavGraphDestination(
+    route = WalletRoute.Register.Init,
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
 @Composable
 fun RegisterScene(
-    onCreateIdentity: () -> Unit,
-    onRecoveryAndSignIn: () -> Unit,
-    onSynchronization: () -> Unit,
+    navController: NavController,
 ) {
+    val repository = get<PersonaServices>()
+    val persona by repository.currentPersona.observeAsState(initial = null)
+
+    LaunchedEffect(Unit) {
+        snapshotFlow { persona }
+            .distinctUntilChanged()
+            .collect {
+                if (it != null) {
+                    navController.navigate(
+                        Uri.parse(Deeplinks.Main.Home(CommonRoute.Main.Tabs.Persona)),
+                        navOptions {
+                            popUpTo(WalletRoute.Register.Init) {
+                                inclusive = true
+                            }
+                        }
+                    )
+                }
+            }
+    }
+
     MaskScene {
         MaskScaffold {
             Column(
@@ -81,7 +120,9 @@ fun RegisterScene(
                 }
                 PrimaryButton(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = { onCreateIdentity.invoke() },
+                    onClick = {
+                        navController.navigate(WalletRoute.Register.WelcomeCreatePersona)
+                    },
                 ) {
                     Text(text = stringResource(R.string.scene_identity_empty_create_an_identity))
                 }
@@ -89,7 +130,9 @@ fun RegisterScene(
                 SecondaryButton(
                     modifier = Modifier
                         .fillMaxWidth(),
-                    onClick = { onRecoveryAndSignIn.invoke() },
+                    onClick = {
+                        navController.navigate(WalletRoute.Register.Recovery.Home)
+                    },
                 ) {
                     Text(text = stringResource(R.string.scene_identity_empty_recovery_sign_in))
                 }

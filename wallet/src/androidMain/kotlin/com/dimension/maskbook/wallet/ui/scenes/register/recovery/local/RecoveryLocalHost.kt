@@ -43,6 +43,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,10 +51,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import androidx.navigation.compose.dialog
 import androidx.navigation.plusAssign
 import com.dimension.maskbook.common.ext.observeAsState
 import com.dimension.maskbook.common.navHostAnimationDurationMillis
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
+import com.dimension.maskbook.common.routeProcessor.annotations.Path
 import com.dimension.maskbook.common.ui.theme.modalScrimColor
 import com.dimension.maskbook.common.ui.widget.BackMetaDisplay
 import com.dimension.maskbook.common.ui.widget.MaskDialog
@@ -68,6 +75,7 @@ import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.common.ui.widget.button.SecondaryButton
 import com.dimension.maskbook.common.ui.widget.rememberMaskBottomSheetNavigator
 import com.dimension.maskbook.wallet.R
+import com.dimension.maskbook.wallet.route.WalletRoute
 import com.dimension.maskbook.wallet.viewmodel.recovery.RecoveryLocalViewModel
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
@@ -78,6 +86,31 @@ import com.google.accompanist.navigation.material.bottomSheet
 import kotlinx.coroutines.flow.distinctUntilChanged
 import org.koin.androidx.compose.getViewModel
 import org.koin.core.parameter.parametersOf
+
+@NavGraphDestination(
+    route = WalletRoute.Register.Recovery.LocalBackup.RemoteBackupRecovery_RecoveryLocal.path,
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
+@Composable
+fun RecoveryLocalHost(
+    navController: NavController,
+    @Back onBack: () -> Unit,
+    @Path("uri") uriString: String,
+) {
+    val uri = remember(uriString) { Uri.parse(uriString) }
+    RecoveryLocalHost(
+        uri = uri,
+        onBack = onBack,
+        onConfirm = {
+            navController.navigate(WalletRoute.Register.Recovery.Complected) {
+                popUpTo(WalletRoute.Register.Init) {
+                    inclusive = true
+                }
+            }
+        }
+    )
+}
 
 @OptIn(
     ExperimentalAnimationApi::class,

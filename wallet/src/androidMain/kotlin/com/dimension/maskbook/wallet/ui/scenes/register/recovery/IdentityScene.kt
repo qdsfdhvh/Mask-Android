@@ -30,9 +30,17 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
+import com.dimension.maskbook.common.routeProcessor.annotations.Path
 import com.dimension.maskbook.common.ui.widget.MaskInputField
 import com.dimension.maskbook.common.ui.widget.MaskScaffold
 import com.dimension.maskbook.common.ui.widget.MaskScene
@@ -41,15 +49,28 @@ import com.dimension.maskbook.common.ui.widget.ScaffoldPadding
 import com.dimension.maskbook.common.ui.widget.button.MaskBackButton
 import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.wallet.R
+import com.dimension.maskbook.wallet.route.WalletRoute
+import com.dimension.maskbook.wallet.viewmodel.recovery.IdentityViewModel
+import org.koin.androidx.compose.getViewModel
+import org.koin.core.parameter.parametersOf
 
+@NavGraphDestination(
+    route = WalletRoute.Register.Recovery.Identity.path,
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
 @Composable
 fun IdentityScene(
-    identity: String,
-    onIdentityChanged: (String) -> Unit,
-    canConfirm: Boolean,
-    onConfirm: () -> Unit,
-    onBack: () -> Unit,
+    navController: NavController,
+    @Back onBack: () -> Unit,
+    @Path("name") name: String,
 ) {
+    val viewModel: IdentityViewModel = getViewModel {
+        parametersOf(name)
+    }
+    val identity by viewModel.identity.observeAsState()
+    val canConfirm by viewModel.canConfirm.observeAsState()
+
     MaskScene {
         MaskScaffold(
             topBar = {
@@ -74,7 +95,9 @@ fun IdentityScene(
                 Spacer(modifier = Modifier.height(12.dp))
                 MaskInputField(
                     value = identity,
-                    onValueChange = onIdentityChanged,
+                    onValueChange = {
+                        viewModel.setIdentity(it)
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(100.dp),
@@ -85,8 +108,15 @@ fun IdentityScene(
                 Spacer(modifier = Modifier.weight(1f))
                 PrimaryButton(
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = onConfirm,
                     enabled = canConfirm,
+                    onClick = {
+                        viewModel.onConfirm()
+                        navController.navigate(WalletRoute.Register.Recovery.Complected) {
+                            popUpTo(WalletRoute.Register.Init) {
+                                inclusive = true
+                            }
+                        }
+                    },
                 ) {
                     Text(text = stringResource(R.string.common_controls_confirm))
                 }

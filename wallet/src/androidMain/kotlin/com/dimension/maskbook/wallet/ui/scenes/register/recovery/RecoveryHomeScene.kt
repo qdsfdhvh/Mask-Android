@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
@@ -41,6 +40,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.dimension.maskbook.common.route.Deeplinks
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
 import com.dimension.maskbook.common.ui.widget.MaskListItem
 import com.dimension.maskbook.common.ui.widget.MaskScaffold
 import com.dimension.maskbook.common.ui.widget.MaskScene
@@ -49,14 +54,20 @@ import com.dimension.maskbook.common.ui.widget.ScaffoldPadding
 import com.dimension.maskbook.common.ui.widget.button.MaskBackButton
 import com.dimension.maskbook.common.ui.widget.button.MaskButton
 import com.dimension.maskbook.wallet.R
+import com.dimension.maskbook.wallet.route.WalletRoute
 
+@NavGraphDestination(
+    route = WalletRoute.Register.Recovery.Home,
+    deeplink = [
+        Deeplinks.Wallet.Recovery,
+    ],
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
 @Composable
 fun RecoveryHomeScene(
-    onBack: () -> Unit,
-    onIdentity: () -> Unit,
-    onPrivateKey: () -> Unit,
-    onLocalBackup: () -> Unit,
-    onRemoteBackup: () -> Unit,
+    navController: NavController,
+    @Back onBack: () -> Unit,
 ) {
     MaskScene {
         MaskScaffold(
@@ -81,32 +92,39 @@ fun RecoveryHomeScene(
                     icon = R.drawable.ic_recovery_identity,
                     text = stringResource(R.string.scene_identity_mnemonic_import_title),
                     secondaryText = "Recovering your persona.",
-                    onClick = onIdentity,
+                    onClick = {
+                        navController.navigate(WalletRoute.Register.Recovery.IdentityPersona)
+                    },
                 )
                 ItemButton(
                     icon = R.drawable.ic_recovery_private_key,
                     text = stringResource(R.string.scene_identity_privatekey_import_title),
                     secondaryText = "Recovering your persona.",
-                    onClick = onPrivateKey,
+                    onClick = {
+                        navController.navigate(WalletRoute.Register.Recovery.PrivateKey)
+                    },
                 )
                 ItemButton(
                     icon = R.drawable.ic_recovery_local_backup,
                     text = stringResource(R.string.scene_identity_recovery_local_backup_recovery_button),
                     secondaryText = "Recovering your personas and wallets (if backed up).",
-                    onClick = onLocalBackup,
+                    onClick = {
+                        navController.navigate(WalletRoute.Register.Recovery.LocalBackup.LocalBackup_PickFile)
+                    },
                 )
                 ItemButton(
                     icon = R.drawable.ic_recovery_icloud_backup,
                     text = stringResource(R.string.scene_identity_recovery_cloud_backup_recovery_button_title),
                     secondaryText = "Recovering your personas and wallets (if backed up) with Email or phone number.",
-                    onClick = onRemoteBackup,
+                    onClick = {
+                        navController.navigate(WalletRoute.Register.Recovery.RemoteBackupRecovery.RemoteBackupRecovery_Email)
+                    },
                 )
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun ItemButton(
     @DrawableRes icon: Int,
