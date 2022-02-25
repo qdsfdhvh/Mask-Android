@@ -54,6 +54,9 @@ private val navControllerType = ClassName("androidx.navigation", "NavController"
 private const val navControllerName = "controller"
 private const val onFinishName = "onFinish"
 
+private const val argumentsNulNullFormat = "val %N = it.arguments!!.get(%S) as %T"
+private const val argumentsNullableFormat = "val %N = it.arguments?.get(%S) as? %T"
+
 @OptIn(KotlinPoetKspPreview::class, KspExperimental::class)
 internal class RouteGraphProcessor(
     private val codeGenerator: CodeGenerator
@@ -149,17 +152,23 @@ internal class RouteGraphProcessor(
                                                         val type = it.type.resolve()
                                                         val typeName = type.toClassName()
 
-                                                        val argumentName = when {
-                                                            it.isAnnotationPresent(Path::class) -> it.getAnnotationsByType(Path::class).first().name
-                                                            it.isAnnotationPresent(Query::class) -> it.getAnnotationsByType(Query::class).first().name
-                                                            else -> it.name?.asString().orEmpty()
+                                                        val (argumentName, nullable) = when {
+                                                            it.isAnnotationPresent(Path::class) -> {
+                                                                it.getAnnotationsByType(Path::class).first()
+                                                                    .run { name to nullable }
+                                                            }
+                                                            it.isAnnotationPresent(Query::class) -> {
+                                                                it.getAnnotationsByType(Query::class).first()
+                                                                    .run { name to nullable }
+                                                            }
+                                                            else -> it.name?.asString().orEmpty() to true
                                                         }
 
                                                         addStatement(
                                                             "navArgument(%S) { type = NavType.%NType; nullable = %L },",
                                                             argumentName,
                                                             if (typeName.isBoolean) "Bool" else type.declaration.simpleName.asString(),
-                                                            it.isAnnotationPresent(Query::class) && !typeName.isLong
+                                                            nullable
                                                         )
                                                     }
                                                 }
@@ -183,7 +192,8 @@ internal class RouteGraphProcessor(
                                 builder.beginControlFlow(")")
                                 ksFunctionDeclaration.parameters.forEach {
                                     if (it.isAnnotationPresent(Path::class)) {
-                                        require(!it.type.resolve().isMarkedNullable)
+                                        val path = it.getAnnotationsByType(Path::class).first()
+                                        require(path.nullable == it.type.resolve().isMarkedNullable)
                                     }
                                     if (it.isAnnotationPresent(Query::class)) {
                                         require(it.type.resolve().isMarkedNullable)
@@ -191,15 +201,16 @@ internal class RouteGraphProcessor(
                                     if (it.isAnnotationPresent(Path::class)) {
                                         val path = it.getAnnotationsByType(Path::class).first()
                                         builder.addStatement(
-                                            "val ${it.name?.asString()} = it.arguments!!.get(%S) as %T",
+                                            if (path.nullable) argumentsNullableFormat else argumentsNulNullFormat,
+                                            it.name?.asString().orEmpty(),
                                             path.name,
                                             it.type.toTypeName()
                                         )
                                     } else if (it.isAnnotationPresent(Query::class)) {
-                                        val query =
-                                            it.getAnnotationsByType(Query::class).first()
+                                        val query = it.getAnnotationsByType(Query::class).first()
                                         builder.addStatement(
-                                            "val ${it.name?.asString()} = it.arguments?.get(%S) as? %T",
+                                            argumentsNullableFormat,
+                                            it.name?.asString().orEmpty(),
                                             query.name,
                                             it.type.toTypeName()
                                         )

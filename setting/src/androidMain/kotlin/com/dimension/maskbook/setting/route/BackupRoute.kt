@@ -329,8 +329,8 @@ fun BackupDataBackupMergeConfirm(
     @Path("value") value: String,
     @Path("code") code: String,
     @Query("download_url") downloadUrl: String?,
-    @Query("size") size: Long?,
-    @Query("uploaded_at") uploadedAt: Long?,
+    @Query("size", nullable = false) size: Long?,
+    @Query("uploaded_at", nullable = false) uploadedAt: Long?,
     @Query("abstract") abstract: String?,
 ) {
     val onDone: () -> Unit = {
@@ -413,8 +413,8 @@ fun BackupDataBackupMerge(
     @Path("value") value: String,
     @Path("code") code: String,
     @Query("download_url") downloadUrl: String?,
-    @Query("size") size: Long?,
-    @Query("uploaded_at") uploadedAt: Long?,
+    @Query("size", nullable = false) size: Long?,
+    @Query("uploaded_at", nullable = false) uploadedAt: Long?,
     @Query("abstract") abstract: String?,
 ) {
     MaskModal {
