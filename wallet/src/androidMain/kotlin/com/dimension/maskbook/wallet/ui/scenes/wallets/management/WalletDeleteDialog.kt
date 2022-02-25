@@ -30,11 +30,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.route.navigationComposeDialog
+import com.dimension.maskbook.common.route.navigationComposeDialogPackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
+import com.dimension.maskbook.common.routeProcessor.annotations.Path
 import com.dimension.maskbook.common.ui.widget.MaskDialog
 import com.dimension.maskbook.common.ui.widget.MaskPasswordInputField
 import com.dimension.maskbook.common.ui.widget.NameImage
@@ -42,6 +50,57 @@ import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.common.ui.widget.button.SecondaryButton
 import com.dimension.maskbook.wallet.R
 import com.dimension.maskbook.wallet.export.model.WalletData
+import com.dimension.maskbook.wallet.route.WalletRoute
+import com.dimension.maskbook.wallet.viewmodel.wallets.BiometricViewModel
+import com.dimension.maskbook.wallet.viewmodel.wallets.management.WalletDeleteViewModel
+import org.koin.androidx.compose.getViewModel
+import org.koin.core.parameter.parametersOf
+
+@NavGraphDestination(
+    route = WalletRoute.WalletManagementDeleteDialog.path,
+    packageName = navigationComposeDialogPackage,
+    functionName = navigationComposeDialog,
+)
+@Composable
+fun WalletDeleteDialog(
+    @Back onBack: () -> Unit,
+    @Path("id") id: String,
+) {
+    val context = LocalContext.current
+
+    val viewModel = getViewModel<WalletDeleteViewModel> {
+        parametersOf(id)
+    }
+    val biometricViewModel = getViewModel<BiometricViewModel>()
+    val biometricEnabled by biometricViewModel.biometricEnabled.observeAsState(initial = false)
+    val wallet by viewModel.wallet.observeAsState(initial = null)
+    val walletData = wallet ?: return
+
+    val password by viewModel.password.observeAsState(initial = "")
+    val canConfirm by viewModel.canConfirm.observeAsState(initial = false)
+    WalletDeleteDialog(
+        walletData = walletData,
+        password = password,
+        onPasswordChanged = { viewModel.setPassword(it) },
+        onBack = onBack,
+        onDelete = {
+            if (biometricEnabled) {
+                biometricViewModel.authenticate(
+                    context = context,
+                    onSuccess = {
+                        viewModel.confirm()
+                        onBack.invoke()
+                    }
+                )
+            } else {
+                viewModel.confirm()
+                onBack.invoke()
+            }
+        },
+        passwordValid = canConfirm,
+        biometricEnabled = biometricEnabled
+    )
+}
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable

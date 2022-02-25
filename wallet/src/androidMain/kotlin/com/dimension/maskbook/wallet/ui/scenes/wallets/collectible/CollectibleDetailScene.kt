@@ -37,28 +37,49 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
+import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
+import com.dimension.maskbook.common.routeProcessor.annotations.Path
 import com.dimension.maskbook.common.ui.widget.MaskScaffold
 import com.dimension.maskbook.common.ui.widget.MaskSingleLineTopAppBar
 import com.dimension.maskbook.common.ui.widget.ScaffoldPadding
 import com.dimension.maskbook.common.ui.widget.button.MaskBackButton
 import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.wallet.R
-import com.dimension.maskbook.wallet.repository.WalletCollectibleData
+import com.dimension.maskbook.wallet.route.WalletRoute
+import com.dimension.maskbook.wallet.viewmodel.wallets.collectible.CollectibleDetailViewModel
+import org.koin.androidx.compose.getViewModel
+import org.koin.core.parameter.parametersOf
 
+@NavGraphDestination(
+    route = WalletRoute.CollectibleDetail.path,
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
 @Composable
 fun CollectibleDetailScene(
-    data: WalletCollectibleData,
-    onBack: () -> Unit,
-    onSend: () -> Unit,
-    onReceive: () -> Unit,
+    navController: NavController,
+    @Back onBack: () -> Unit,
+    @Path("id") id: String,
 ) {
+    val viewModel = getViewModel<CollectibleDetailViewModel> {
+        parametersOf(id)
+    }
+    val walletData by viewModel.data.observeAsState(initial = null)
+    val data = walletData ?: return
+
     MaskScaffold(
         topBar = {
             MaskSingleLineTopAppBar(
@@ -106,7 +127,7 @@ fun CollectibleDetailScene(
             ) {
                 PrimaryButton(
                     modifier = Modifier.weight(1f),
-                    onClick = { onSend.invoke() },
+                    onClick = {},
                     elevation = ButtonDefaults.elevation(defaultElevation = 0.dp),
                     colors = ButtonDefaults.buttonColors(backgroundColor = Color(0XFFFFB915))
                 ) {
@@ -116,7 +137,9 @@ fun CollectibleDetailScene(
                 }
                 PrimaryButton(
                     modifier = Modifier.weight(1f),
-                    onClick = { onReceive.invoke() },
+                    onClick = {
+                        navController.navigate(WalletRoute.WalletQrcode(data.chainType.name))
+                    },
                     elevation = ButtonDefaults.elevation(defaultElevation = 0.dp),
                 ) {
                     Icon(

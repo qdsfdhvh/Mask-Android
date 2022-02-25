@@ -57,6 +57,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.route.navigationComposeBottomSheet
+import com.dimension.maskbook.common.route.navigationComposeBottomSheetPackage
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
 import com.dimension.maskbook.common.ui.widget.CircleCheckbox
 import com.dimension.maskbook.common.ui.widget.MaskListItem
 import com.dimension.maskbook.common.ui.widget.MaskModal
@@ -70,6 +75,9 @@ import com.dimension.maskbook.common.ui.widget.button.MaskTextButton
 import com.dimension.maskbook.wallet.R
 import com.dimension.maskbook.wallet.export.model.ChainType
 import com.dimension.maskbook.wallet.export.model.WalletData
+import com.dimension.maskbook.wallet.route.WalletRoute
+import com.dimension.maskbook.wallet.viewmodel.wallets.management.WalletSwitchViewModel
+import org.koin.androidx.compose.getViewModel
 
 val ChainType.onDrawableRes: Int
     get() = when (this) {
@@ -107,6 +115,55 @@ val supportedChainType = buildList {
     add(ChainType.polygon)
     add(ChainType.arbitrum)
     add(ChainType.xdai)
+}
+
+@NavGraphDestination(
+    route = WalletRoute.SwitchWallet,
+    packageName = navigationComposeBottomSheetPackage,
+    functionName = navigationComposeBottomSheet,
+)
+@Composable
+fun WalletSwitchSceneModal(
+    navController: NavController,
+) {
+    val viewModel = getViewModel<WalletSwitchViewModel>()
+    val wallets by viewModel.wallets.observeAsState(initial = emptyList())
+    val chainType by viewModel.network.observeAsState(initial = ChainType.eth)
+    val currentWallet by viewModel.currentWallet.observeAsState(initial = null)
+    val wallet = currentWallet ?: return
+
+    WalletSwitchSceneModal(
+        selectedWallet = wallet,
+        wallets = wallets,
+        onWalletSelected = {
+            viewModel.setCurrentWallet(it)
+        },
+        selectedChainType = chainType,
+        onChainTypeSelected = {
+            viewModel.setChainType(it)
+        },
+        onAddWalletClicked = {
+            navController.navigate(WalletRoute.SwitchWalletAdd) {
+                popUpTo(WalletRoute.SwitchWallet) {
+                    inclusive = true
+                }
+            }
+        },
+        onWalletConnectClicked = {
+            navController.navigate(WalletRoute.SwitchWalletAddWalletConnect) {
+                popUpTo(WalletRoute.SwitchWallet) {
+                    inclusive = true
+                }
+            }
+        },
+        onEditMenuClicked = { wallet ->
+            navController.navigate(WalletRoute.WalletSwitchEditModal(wallet.id)) {
+                popUpTo(WalletRoute.SwitchWallet) {
+                    inclusive = true
+                }
+            }
+        }
+    )
 }
 
 @Composable

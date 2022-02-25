@@ -32,20 +32,78 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.DialogProperties
+import androidx.navigation.NavController
+import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.route.navigationComposeDialog
+import com.dimension.maskbook.common.route.navigationComposeDialogPackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
+import com.dimension.maskbook.common.routeProcessor.annotations.Path
 import com.dimension.maskbook.common.ui.widget.MaskDialog
 import com.dimension.maskbook.common.ui.widget.MaskModal
 import com.dimension.maskbook.common.ui.widget.MaskPasswordInputField
 import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.common.ui.widget.button.SecondaryButton
 import com.dimension.maskbook.wallet.R
+import com.dimension.maskbook.wallet.route.WalletRoute
+import com.dimension.maskbook.wallet.viewmodel.wallets.UnlockWalletViewModel
+import org.koin.androidx.compose.getViewModel
+
+@NavGraphDestination(
+    route = WalletRoute.UnlockWalletDialog.path,
+    packageName = navigationComposeDialogPackage,
+    functionName = navigationComposeDialog,
+)
+@Composable
+fun UnlockWalletDialog(
+    navController: NavController,
+    @Back onBack: () -> Unit,
+    @Path("target") target: String,
+) {
+    val onDone = {
+        navController.navigate(target) {
+            popUpTo(WalletRoute.UnlockWalletDialog.path) {
+                inclusive = true
+            }
+        }
+    }
+
+    val viewModel = getViewModel<UnlockWalletViewModel>()
+    val biometricEnable by viewModel.biometricEnabled.observeAsState(initial = false)
+    val password by viewModel.password.observeAsState(initial = "")
+    val passwordValid by viewModel.passwordValid.observeAsState(initial = false)
+    val context = LocalContext.current
+
+    UnlockWalletDialog(
+        onBack = { navController.popBackStack() },
+        biometricEnabled = biometricEnable,
+        password = password,
+        onPasswordChanged = { viewModel.setPassword(it) },
+        passwordValid = passwordValid,
+        onConfirm = {
+            if (biometricEnable) {
+                viewModel.authenticate(
+                    context = context,
+                    onSuccess = {
+                        onDone.invoke()
+                    }
+                )
+            } else if (passwordValid) {
+                onDone.invoke()
+            }
+        }
+    )
+}
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -73,7 +131,10 @@ fun UnlockWalletDialog(
                     MaskPasswordInputField(value = password, onValueChange = onPasswordChanged)
                     if (!passwordValid) {
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = stringResource(R.string.scene_change_password_incorrect_password), color = Color.Red)
+                        Text(
+                            text = stringResource(R.string.scene_change_password_incorrect_password),
+                            color = Color.Red
+                        )
                     }
                 }
             }

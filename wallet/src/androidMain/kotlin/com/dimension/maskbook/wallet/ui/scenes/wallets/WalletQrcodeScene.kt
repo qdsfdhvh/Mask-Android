@@ -37,15 +37,28 @@ import androidx.compose.material.Card
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.ext.shareText
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
+import com.dimension.maskbook.common.routeProcessor.annotations.Path
+import com.dimension.maskbook.common.ui.notification.StringResNotificationEvent.Companion.show
+import com.dimension.maskbook.common.ui.widget.LocalInAppNotification
 import com.dimension.maskbook.common.ui.widget.MaskScaffold
 import com.dimension.maskbook.common.ui.widget.MaskScene
 import com.dimension.maskbook.common.ui.widget.MaskSingleLineTopAppBar
@@ -54,17 +67,30 @@ import com.dimension.maskbook.common.ui.widget.button.MaskBackButton
 import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.common.ui.widget.button.clickable
 import com.dimension.maskbook.wallet.R
+import com.dimension.maskbook.wallet.repository.IWalletRepository
+import com.dimension.maskbook.wallet.route.WalletRoute
 import com.google.zxing.BarcodeFormat
 import com.journeyapps.barcodescanner.BarcodeEncoder
+import org.koin.androidx.compose.get
 
+@NavGraphDestination(
+    route = WalletRoute.WalletQrcode.path,
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
 @Composable
 fun WalletQrcodeScene(
-    address: String,
-    name: String,
-    onShare: () -> Unit,
-    onBack: () -> Unit,
-    onCopy: () -> Unit,
+    @Back onBack: () -> Unit,
+    @Path("name") name: String,
 ) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboardManager.current
+    val inAppNotification = LocalInAppNotification.current
+
+    val repository = get<IWalletRepository>()
+    val currentWallet by repository.currentWallet.observeAsState(initial = null)
+    val address = currentWallet?.address.orEmpty()
+
     MaskScene {
         MaskScaffold(
             topBar = {
@@ -126,7 +152,8 @@ fun WalletQrcodeScene(
                                 .clip(MaterialTheme.shapes.medium)
                                 .padding(horizontal = 16.dp, vertical = 10.dp)
                                 .clickable {
-                                    onCopy.invoke()
+                                    clipboardManager.setText(buildAnnotatedString { append(address) })
+                                    inAppNotification.show(R.string.common_alert_copied_to_clipboard_title)
                                 }
                         ) {
                             Text(text = address, textAlign = TextAlign.Center)
@@ -136,7 +163,9 @@ fun WalletQrcodeScene(
                 Spacer(modifier = Modifier.weight(1f))
                 Spacer(modifier = Modifier.height(16.dp))
                 PrimaryButton(
-                    onClick = { onShare.invoke() },
+                    onClick = {
+                        context.shareText(address)
+                    },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(text = stringResource(R.string.scene_wallet_receive_btn_share))

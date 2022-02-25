@@ -49,6 +49,11 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.unit.dp
+import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
 import com.dimension.maskbook.common.ui.notification.StringResNotificationEvent.Companion.show
 import com.dimension.maskbook.common.ui.widget.LocalInAppNotification
 import com.dimension.maskbook.common.ui.widget.MaskInputField
@@ -59,18 +64,28 @@ import com.dimension.maskbook.common.ui.widget.ScaffoldPadding
 import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.common.ui.widget.button.SecondaryButton
 import com.dimension.maskbook.wallet.R
+import com.dimension.maskbook.wallet.route.WalletRoute
+import com.dimension.maskbook.wallet.viewmodel.wallets.management.WalletBackupViewModel
+import org.koin.androidx.compose.getViewModel
 
 enum class BackupType {
     Keystore,
     PrivateKey,
 }
 
+@NavGraphDestination(
+    route = WalletRoute.WalletManagementBackup,
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
 @Composable
 fun BackupWalletScene(
-    keyStore: String,
-    privateKey: String,
-    onBack: () -> Unit,
+    @Back onBack: () -> Unit,
 ) {
+    val viewModel = getViewModel<WalletBackupViewModel>()
+    val keyStore by viewModel.keyStore.observeAsState(initial = "")
+    val privateKey by viewModel.privateKey.observeAsState(initial = "")
+
     MaskScene {
         MaskScaffold(
             topBar = {

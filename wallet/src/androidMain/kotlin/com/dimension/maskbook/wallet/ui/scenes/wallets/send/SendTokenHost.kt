@@ -41,6 +41,11 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.dimension.maskbook.common.bigDecimal.BigDecimal
 import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
+import com.dimension.maskbook.common.routeProcessor.annotations.Path
 import com.dimension.maskbook.common.ui.notification.StringResNotificationEvent.Companion.show
 import com.dimension.maskbook.common.ui.theme.modalScrimColor
 import com.dimension.maskbook.common.ui.widget.LocalInAppNotification
@@ -49,6 +54,7 @@ import com.dimension.maskbook.wallet.R
 import com.dimension.maskbook.wallet.ext.humanizeDollar
 import com.dimension.maskbook.wallet.ext.humanizeToken
 import com.dimension.maskbook.wallet.repository.UnlockType
+import com.dimension.maskbook.wallet.route.WalletRoute
 import com.dimension.maskbook.wallet.ui.scenes.wallets.common.ScanQrcodeScene
 import com.dimension.maskbook.wallet.viewmodel.wallets.BiometricViewModel
 import com.dimension.maskbook.wallet.viewmodel.wallets.send.AddContactViewModel
@@ -62,14 +68,17 @@ import com.google.accompanist.navigation.material.ModalBottomSheetLayout
 import com.google.accompanist.navigation.material.bottomSheet
 import org.koin.androidx.compose.getViewModel
 import org.koin.core.parameter.parametersOf
-import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalMaterialNavigationApi::class, ExperimentalTime::class)
+@NavGraphDestination(
+    route = WalletRoute.SendTokenScene.path,
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
+@OptIn(ExperimentalMaterialNavigationApi::class)
 @Composable
 fun SendTokenHost(
-    tokenAddress: String,
-    onBack: () -> Unit,
-    onDone: () -> Unit,
+    @Back onBack: () -> Unit,
+    @Path("tokenAddress") tokenAddress: String,
 ) {
     val context = LocalContext.current
 
@@ -333,7 +342,7 @@ fun SendTokenHost(
                         total = (amount * currentTokenData.price + gasTotal * usdValue).humanizeDollar(),
                         onConfirm = {
                             viewModel.send(currentTokenData, amount, gasLimit, maxFee, maxPriorityFee)
-                            onDone.invoke()
+                            onBack.invoke()
                             // open Wallet App if it is connected
                             if (deeplink.isNotEmpty()) {
                                 try {

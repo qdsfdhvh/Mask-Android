@@ -20,6 +20,7 @@
  */
 package com.dimension.maskbook.wallet.ui.scenes.wallets.create.create
 
+import android.net.Uri
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
@@ -36,13 +37,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.navigation.NavController
 import androidx.navigation.compose.dialog
+import androidx.navigation.navOptions
 import com.dimension.maskbook.common.ext.observeAsState
 import com.dimension.maskbook.common.navHostAnimationDurationMillis
+import com.dimension.maskbook.common.route.CommonRoute
+import com.dimension.maskbook.common.route.Deeplinks
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
+import com.dimension.maskbook.common.routeProcessor.annotations.Path
 import com.dimension.maskbook.common.ui.widget.MaskDialog
 import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.wallet.R
 import com.dimension.maskbook.wallet.repository.WalletCreateOrImportResult
+import com.dimension.maskbook.wallet.route.WalletRoute
 import com.dimension.maskbook.wallet.ui.scenes.register.createidentity.VerifyIdentityScene
 import com.dimension.maskbook.wallet.ui.scenes.wallets.common.Dialog
 import com.dimension.maskbook.wallet.viewmodel.wallets.create.CreateWalletRecoveryKeyViewModel
@@ -51,13 +62,30 @@ import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import org.koin.androidx.compose.getViewModel
 
+@NavGraphDestination(
+    route = WalletRoute.CreateWallet.path,
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun CreateWalletHost(
-    wallet: String,
-    onDone: () -> Unit,
-    onBack: () -> Unit,
+    rootNavController: NavController,
+    @Back onBack: () -> Unit,
+    @Path("wallet") wallet: String,
 ) {
+    val onDone = {
+        rootNavController.navigate(
+            Uri.parse(Deeplinks.Main.Home(CommonRoute.Main.Tabs.Wallet)),
+            navOptions = navOptions {
+                launchSingleTop = true
+                popUpTo(CommonRoute.Main.Home) {
+                    inclusive = false
+                }
+            }
+        )
+    }
+
     val navController = rememberAnimatedNavController()
     val viewModel: CreateWalletRecoveryKeyViewModel = getViewModel()
     viewModel.setWallet(wallet)

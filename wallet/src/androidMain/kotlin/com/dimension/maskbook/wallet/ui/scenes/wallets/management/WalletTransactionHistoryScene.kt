@@ -22,23 +22,35 @@ package com.dimension.maskbook.wallet.ui.scenes.wallets.management
 
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
-import com.dimension.maskbook.common.model.DateType
+import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
 import com.dimension.maskbook.common.ui.widget.MaskScaffold
 import com.dimension.maskbook.common.ui.widget.MaskScene
 import com.dimension.maskbook.common.ui.widget.MaskSingleLineTopAppBar
 import com.dimension.maskbook.common.ui.widget.button.MaskBackButton
 import com.dimension.maskbook.wallet.R
-import com.dimension.maskbook.wallet.repository.TransactionData
+import com.dimension.maskbook.wallet.route.WalletRoute
 import com.dimension.maskbook.wallet.ui.widget.TransactionHistoryList
+import com.dimension.maskbook.wallet.viewmodel.wallets.management.WalletTransactionHistoryViewModel
+import org.koin.androidx.compose.getViewModel
 
+@NavGraphDestination(
+    route = WalletRoute.WalletManagementTransactionHistory,
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
 @Composable
 fun WalletTransactionHistoryScene(
-    onBack: () -> Unit,
-    transactions: Map<DateType, List<TransactionData>>,
-    onSpeedUp: (TransactionData) -> Unit,
-    onCancel: (TransactionData) -> Unit,
+    @Back onBack: () -> Unit,
 ) {
+    val viewModel = getViewModel<WalletTransactionHistoryViewModel>()
+    val transactions by viewModel.transactions.observeAsState()
+
     MaskScene {
         MaskScaffold(
             topBar = {
@@ -56,8 +68,8 @@ fun WalletTransactionHistoryScene(
         ) {
             TransactionHistoryList(
                 transactions = transactions,
-                onSpeedUp = onSpeedUp,
-                onCancel = onCancel,
+                onSpeedUp = {},
+                onCancel = {},
             )
         }
     }

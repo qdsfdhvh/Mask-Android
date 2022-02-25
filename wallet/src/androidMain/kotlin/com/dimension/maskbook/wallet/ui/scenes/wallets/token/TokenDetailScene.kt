@@ -20,7 +20,6 @@
  */
 package com.dimension.maskbook.wallet.ui.scenes.wallets.token
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -33,21 +32,27 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.material.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
+import com.dimension.maskbook.common.ext.observeAsState
 import com.dimension.maskbook.common.model.DateType
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
+import com.dimension.maskbook.common.routeProcessor.annotations.Path
 import com.dimension.maskbook.common.ui.widget.MaskScaffold
 import com.dimension.maskbook.common.ui.widget.MaskScene
 import com.dimension.maskbook.common.ui.widget.MaskTopAppBar
@@ -59,9 +64,53 @@ import com.dimension.maskbook.wallet.export.model.WalletTokenData
 import com.dimension.maskbook.wallet.ext.humanizeDollar
 import com.dimension.maskbook.wallet.ext.humanizeToken
 import com.dimension.maskbook.wallet.repository.TransactionData
+import com.dimension.maskbook.wallet.route.WalletRoute
 import com.dimension.maskbook.wallet.ui.widget.TransactionHistoryList
+import com.dimension.maskbook.wallet.viewmodel.wallets.TokenDetailViewModel
+import org.koin.androidx.compose.getViewModel
+import org.koin.core.parameter.parametersOf
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterialApi::class)
+@NavGraphDestination(
+    route = WalletRoute.TokenDetail.path,
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
+@Composable
+fun TokenDetailScene(
+    navController: NavController,
+    @Path("id") id: String,
+) {
+    val viewModel = getViewModel<TokenDetailViewModel> {
+        parametersOf(id)
+    }
+    val currentToken by viewModel.tokenData.observeAsState()
+    val transactions by viewModel.transactions.observeAsState()
+    val dWebData by viewModel.dWebData.observeAsState()
+    val currentWalletTokenData by viewModel.walletTokenData.observeAsState()
+
+    val token = currentToken ?: return
+    val walletTokenData = currentWalletTokenData ?: return
+
+    TokenDetailScene(
+        onBack = { navController.popBackStack() },
+        tokenData = token,
+        walletTokenData = walletTokenData,
+        transactions = transactions,
+        onSpeedUp = { },
+        onCancel = { },
+        onSend = {
+            if (token.chainType != dWebData?.chainType) {
+                navController.navigate(WalletRoute.WalletNetworkSwitch(token.chainType.name))
+            } else {
+                navController.navigate(WalletRoute.SendTokenScene(token.address))
+            }
+        },
+        onReceive = {
+            navController.navigate(WalletRoute.WalletQrcode(token.symbol))
+        },
+    )
+}
+
 @Composable
 fun TokenDetailScene(
     onBack: () -> Unit,

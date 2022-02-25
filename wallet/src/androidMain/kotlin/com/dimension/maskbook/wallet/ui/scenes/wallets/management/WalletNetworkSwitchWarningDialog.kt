@@ -28,7 +28,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
@@ -36,12 +36,54 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.route.navigationComposeDialog
+import com.dimension.maskbook.common.route.navigationComposeDialogPackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
 import com.dimension.maskbook.common.ui.widget.MaskDialog
 import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.common.ui.widget.button.SecondaryButton
 import com.dimension.maskbook.wallet.R
+import com.dimension.maskbook.wallet.export.model.ChainType
+import com.dimension.maskbook.wallet.route.WalletRoute
+import com.dimension.maskbook.wallet.viewmodel.wallets.management.WalletSwitchViewModel
+import org.koin.androidx.compose.getViewModel
 
-@OptIn(ExperimentalComposeUiApi::class)
+@NavGraphDestination(
+    route = WalletRoute.WalletNetworkSwitchWarningDialog,
+    packageName = navigationComposeDialogPackage,
+    functionName = navigationComposeDialog,
+)
+@Composable
+fun WalletNetworkSwitchWarningDialog(
+    @Back onBack: () -> Unit,
+) {
+    val viewModel = getViewModel<WalletSwitchViewModel>()
+    val currentNetwork by viewModel.network.observeAsState(initial = ChainType.eth)
+    val currentWallet by viewModel.currentWallet.observeAsState(initial = null)
+    val wallet = currentWallet ?: return
+
+    if (!wallet.fromWalletConnect ||
+        wallet.walletConnectChainType == currentNetwork ||
+        wallet.walletConnectChainType == null
+    ) {
+        onBack.invoke()
+    }
+
+    WalletNetworkSwitchWarningDialog(
+        currentNetwork = currentNetwork.name,
+        connectingNetwork = wallet.walletConnectChainType?.name ?: "",
+        onCancel = onBack,
+        onSwitch = {
+            wallet.walletConnectChainType?.let { type ->
+                viewModel.setChainType(type)
+            }
+            onBack.invoke()
+        }
+    )
+}
+
 @Composable
 fun WalletNetworkSwitchWarningDialog(
     currentNetwork: String,

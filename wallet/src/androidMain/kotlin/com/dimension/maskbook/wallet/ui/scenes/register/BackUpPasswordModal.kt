@@ -18,7 +18,7 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with Mask-Android.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.dimension.maskbook.wallet.ui.scenes.persona
+package com.dimension.maskbook.wallet.ui.scenes.register
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -30,18 +30,73 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.route.Deeplinks
+import com.dimension.maskbook.common.route.navigationComposeBottomSheet
+import com.dimension.maskbook.common.route.navigationComposeBottomSheetPackage
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
 import com.dimension.maskbook.common.ui.widget.MaskModal
 import com.dimension.maskbook.common.ui.widget.MaskPasswordInputField
 import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
 import com.dimension.maskbook.wallet.R
+import com.dimension.maskbook.wallet.route.WalletRoute
+import com.dimension.maskbook.wallet.viewmodel.wallets.BackUpPasswordViewModel
+import org.koin.androidx.compose.getViewModel
 
-@OptIn(ExperimentalComposeUiApi::class)
+@NavGraphDestination(
+    route = WalletRoute.BackUpPassword.path,
+    deeplink = [
+        Deeplinks.Wallet.BackUpPassword.path,
+    ],
+    packageName = navigationComposeBottomSheetPackage,
+    functionName = navigationComposeBottomSheet,
+)
+@Composable
+fun BackUpPasswordModal(
+    navController: NavController,
+    target: String,
+) {
+    val onDone = {
+        navController.navigate(target) {
+            popUpTo(WalletRoute.BackUpPassword.path) {
+                inclusive = true
+            }
+        }
+    }
+
+    val viewModel = getViewModel<BackUpPasswordViewModel>()
+    val biometricEnable by viewModel.biometricEnabled.observeAsState(initial = false)
+    val password by viewModel.password.observeAsState(initial = "")
+    val passwordValid by viewModel.passwordValid.observeAsState(initial = false)
+    val context = LocalContext.current
+    BackUpPasswordModal(
+        biometricEnabled = biometricEnable,
+        password = password,
+        onPasswordChanged = { viewModel.setPassword(it) },
+        passwordValid = passwordValid,
+        onConfirm = {
+            if (biometricEnable) {
+                viewModel.authenticate(
+                    context = context,
+                    onSuccess = {
+                        onDone.invoke()
+                    }
+                )
+            } else {
+                onDone.invoke()
+            }
+        }
+    )
+}
+
 @Composable
 fun BackUpPasswordModal(
     biometricEnabled: Boolean,

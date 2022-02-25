@@ -26,24 +26,71 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
 import com.dimension.maskbook.common.ext.applyTextStyle
+import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.route.navigationComposeBottomSheet
+import com.dimension.maskbook.common.route.navigationComposeBottomSheetPackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
 import com.dimension.maskbook.common.ui.widget.MaskListItem
 import com.dimension.maskbook.common.ui.widget.MaskModal
 import com.dimension.maskbook.common.ui.widget.MiddleEllipsisText
 import com.dimension.maskbook.common.ui.widget.button.MaskButton
 import com.dimension.maskbook.wallet.R
 import com.dimension.maskbook.wallet.export.model.WalletData
+import com.dimension.maskbook.wallet.route.WalletRoute
+import com.dimension.maskbook.wallet.viewmodel.wallets.WalletConnectManagementViewModel
+import com.dimension.maskbook.wallet.viewmodel.wallets.WalletManagementModalViewModel
+import org.koin.androidx.compose.getViewModel
 
-@OptIn(ExperimentalMaterialApi::class)
+@NavGraphDestination(
+    route = WalletRoute.WalletBalancesMenu,
+    packageName = navigationComposeBottomSheetPackage,
+    functionName = navigationComposeBottomSheet,
+)
+@Composable
+fun WalletManagementModal(
+    navController: NavController,
+    @Back onBack: () -> Unit,
+) {
+    val viewModel = getViewModel<WalletManagementModalViewModel>()
+    val wcViewModel = getViewModel<WalletConnectManagementViewModel>()
+
+    val currentWallet by viewModel.currentWallet.observeAsState(initial = null)
+    val wallet = currentWallet ?: return
+
+    WalletManagementModal(
+        walletData = wallet,
+        onRename = {
+            navController.navigate(WalletRoute.WalletManagementRename(wallet.id, wallet.name))
+        },
+        onBackup = {
+            navController.navigate(WalletRoute.UnlockWalletDialog(WalletRoute.WalletManagementBackup))
+        },
+        onTransactionHistory = {
+            navController.navigate(WalletRoute.WalletManagementTransactionHistory)
+        },
+        onDelete = {
+            onBack.invoke()
+            navController.navigate(WalletRoute.WalletManagementDeleteDialog(wallet.id))
+        },
+        onDisconnect = {
+            wcViewModel.disconnect(walletData = wallet)
+            onBack.invoke()
+        }
+    )
+}
+
 @Composable
 fun WalletManagementModal(
     walletData: WalletData,

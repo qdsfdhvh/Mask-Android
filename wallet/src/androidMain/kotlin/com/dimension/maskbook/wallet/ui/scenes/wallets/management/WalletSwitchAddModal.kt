@@ -26,28 +26,38 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import com.dimension.maskbook.common.route.navigationComposeBottomSheet
+import com.dimension.maskbook.common.route.navigationComposeBottomSheetPackage
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
 import com.dimension.maskbook.common.ui.widget.MaskListItem
 import com.dimension.maskbook.common.ui.widget.MaskModal
 import com.dimension.maskbook.common.ui.widget.button.MaskButton
 import com.dimension.maskbook.wallet.R
+import com.dimension.maskbook.wallet.route.WalletRoute
+import com.dimension.maskbook.wallet.ui.scenes.wallets.create.CreateType
 
-@OptIn(ExperimentalMaterialApi::class)
+@NavGraphDestination(
+    route = WalletRoute.SwitchWalletAdd,
+    packageName = navigationComposeBottomSheetPackage,
+    functionName = navigationComposeBottomSheet,
+)
 @Composable
 fun WalletSwitchAddModal(
-    onCreate: () -> Unit,
-    onImport: () -> Unit,
+    navController: NavController,
 ) {
     MaskModal {
         Column {
             WalletSwitchAddItem(
-                onClick = onCreate,
+                onClick = {
+                    navController.navigate(WalletRoute.WalletIntroHostLegal(CreateType.CREATE.name))
+                },
                 icon = R.drawable.ic_create_wallet,
                 text = {
                     Text(text = stringResource(R.string.scene_wallets_list_add_wallets_items_add))
@@ -55,7 +65,9 @@ fun WalletSwitchAddModal(
             )
             Spacer(modifier = Modifier.height(16.dp))
             WalletSwitchAddItem(
-                onClick = onImport,
+                onClick = {
+                    navController.navigate(WalletRoute.WalletIntroHostLegal(CreateType.IMPORT.name))
+                },
                 icon = R.drawable.ic_import_wallet,
                 text = {
                     Text(text = stringResource(R.string.common_controls_import_wallet))

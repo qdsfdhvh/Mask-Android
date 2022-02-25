@@ -20,26 +20,54 @@
  */
 package com.dimension.maskbook.wallet.ui.scenes.wallets.create.import
 
+import android.net.Uri
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.navigation.NavController
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.navigation.navOptions
 import com.dimension.maskbook.common.ext.encodeUrl
 import com.dimension.maskbook.common.navHostAnimationDurationMillis
+import com.dimension.maskbook.common.route.CommonRoute
+import com.dimension.maskbook.common.route.Deeplinks
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Back
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
+import com.dimension.maskbook.common.routeProcessor.annotations.Path
+import com.dimension.maskbook.wallet.route.WalletRoute
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.composable
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 
+@NavGraphDestination(
+    route = WalletRoute.ImportWallet.path,
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun ImportWalletHost(
-    wallet: String,
-    onDone: () -> Unit,
-    onBack: () -> Unit,
+    rootNavController: NavController,
+    @Path("wallet") wallet: String,
+    @Back onBack: () -> Unit,
 ) {
+    val onDone = {
+        rootNavController.navigate(
+            Uri.parse(Deeplinks.Main.Home(CommonRoute.Main.Tabs.Wallet)),
+            navOptions = navOptions {
+                launchSingleTop = true
+                popUpTo(CommonRoute.Main.Home) {
+                    inclusive = false
+                }
+            }
+        )
+    }
+
     val navController = rememberAnimatedNavController()
     AnimatedNavHost(
         navController = navController,

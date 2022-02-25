@@ -76,6 +76,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.navOptions
 import coil.compose.rememberImagePainter
 import com.dimension.maskbook.common.ext.observeAsState
+import com.dimension.maskbook.common.route.navigationComposeBottomSheet
+import com.dimension.maskbook.common.route.navigationComposeBottomSheetPackage
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
 import com.dimension.maskbook.common.ui.LocalRootNavController
 import com.dimension.maskbook.common.ui.notification.StringResNotificationEvent.Companion.show
 import com.dimension.maskbook.common.ui.widget.LocalInAppNotification
@@ -103,6 +106,11 @@ enum class WalletConnectType {
     QRCode,
 }
 
+@NavGraphDestination(
+    route = WalletRoute.SwitchWalletAddWalletConnect,
+    packageName = navigationComposeBottomSheetPackage,
+    functionName = navigationComposeBottomSheet,
+)
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun WalletConnectModal() {
