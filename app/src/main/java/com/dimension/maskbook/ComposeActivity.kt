@@ -52,7 +52,6 @@ import com.dimension.maskbook.persona.PersonaSetup
 import com.dimension.maskbook.setting.SettingSetup
 import com.dimension.maskbook.wallet.WalletSetup
 import com.dimension.maskbook.wallet.route.WalletRoute
-import com.dimension.maskbook.wallet.route.mainRoute
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -153,7 +152,6 @@ fun App(
                     )
                 },
             ) {
-                mainRoute(onBack = onFinish)
                 WalletSetup.route(this, navController = navController, onFinish = onFinish)
                 LabsSetup.route(this, navController = navController, onFinish = onFinish)
                 PersonaSetup.route(this, navController = navController, onFinish = onFinish)

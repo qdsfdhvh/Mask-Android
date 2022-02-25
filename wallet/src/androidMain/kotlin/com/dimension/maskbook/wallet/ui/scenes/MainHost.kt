@@ -20,7 +20,6 @@
  */
 package com.dimension.maskbook.wallet.ui.scenes
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -54,11 +53,16 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.dimension.maskbook.common.ext.getAll
 import com.dimension.maskbook.common.route.CommonRoute
+import com.dimension.maskbook.common.route.Deeplinks
+import com.dimension.maskbook.common.route.navigationComposeAnimComposable
+import com.dimension.maskbook.common.route.navigationComposeAnimComposablePackage
+import com.dimension.maskbook.common.routeProcessor.annotations.Finish
+import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
+import com.dimension.maskbook.common.routeProcessor.annotations.Path
 import com.dimension.maskbook.common.ui.tab.TabScreen
 import com.dimension.maskbook.common.ui.widget.MaskScaffold
 import com.dimension.maskbook.common.ui.widget.MaskScene
 import com.dimension.maskbook.common.ui.widget.button.clickable
-import com.google.accompanist.navigation.material.ExperimentalMaterialNavigationApi
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.rememberPagerState
@@ -80,19 +84,26 @@ private val Colors.tabBackground: Color
         MaterialTheme.colors.background
     }
 
-@ExperimentalMaterialNavigationApi
-@OptIn(ExperimentalAnimationApi::class, ExperimentalPagerApi::class)
+@NavGraphDestination(
+    route = CommonRoute.Main.Home,
+    deeplink = [
+        Deeplinks.Main.Home.path
+    ],
+    packageName = navigationComposeAnimComposablePackage,
+    functionName = navigationComposeAnimComposable,
+)
+@OptIn(ExperimentalPagerApi::class)
 @Composable
 fun MainHost(
-    initialTab: String,
-    onBack: () -> Unit,
+    @Finish onBack: () -> Unit,
+    @Path("initialRoute", nullable = true) initialTab: String?,
 ) {
     val tabs = getAll<TabScreen>().sortedBy {
         tabOrder[it.route]
     }
 
     val initialPage = remember(initialTab) {
-        if (initialTab.isEmpty()) return@remember 0
+        if (initialTab.isNullOrEmpty()) return@remember 0
         val index = tabs.indexOfFirst { it.route == initialTab }
         if (index != -1) index else 0
     }

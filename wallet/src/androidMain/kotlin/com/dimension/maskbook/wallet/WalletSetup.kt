@@ -57,6 +57,7 @@ import com.dimension.maskbook.wallet.route.WalletRoute
 import com.dimension.maskbook.wallet.route.registerRoute
 import com.dimension.maskbook.wallet.route.walletsRoute
 import com.dimension.maskbook.wallet.services.WalletServices
+import com.dimension.maskbook.wallet.ui.scenes.generatedRoute
 import com.dimension.maskbook.wallet.ui.scenes.persona.BackUpPasswordModal
 import com.dimension.maskbook.wallet.ui.tab.WalletTabScreen
 import com.dimension.maskbook.wallet.viewmodel.WelcomeViewModel
@@ -117,6 +118,7 @@ object WalletSetup : ModuleSetup {
 
     @OptIn(ExperimentalMaterialNavigationApi::class)
     override fun NavGraphBuilder.route(navController: NavController, onFinish: () -> Unit) {
+        generatedRoute(navController, onFinish = onFinish)
         walletsRoute(navController)
         registerRoute(navController)
         bottomSheet(
