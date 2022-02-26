@@ -43,6 +43,7 @@ import com.dimension.maskbook.common.route.Deeplinks
 import com.dimension.maskbook.common.route.navigationComposeBottomSheet
 import com.dimension.maskbook.common.route.navigationComposeBottomSheetPackage
 import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
+import com.dimension.maskbook.common.routeProcessor.annotations.Path
 import com.dimension.maskbook.common.ui.widget.MaskModal
 import com.dimension.maskbook.common.ui.widget.MaskPasswordInputField
 import com.dimension.maskbook.common.ui.widget.button.PrimaryButton
@@ -62,7 +63,7 @@ import org.koin.androidx.compose.getViewModel
 @Composable
 fun BackUpPasswordModal(
     navController: NavController,
-    target: String,
+    @Path("target") target: String,
 ) {
     val onDone = {
         navController.navigate(target) {
