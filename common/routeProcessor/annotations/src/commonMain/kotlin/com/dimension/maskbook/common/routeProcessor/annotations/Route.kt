@@ -29,6 +29,10 @@ annotation class Route(
 
 @Retention(AnnotationRetention.SOURCE)
 @Target(AnnotationTarget.FUNCTION)
+annotation class GeneratedFunction
+
+@Retention(AnnotationRetention.SOURCE)
+@Target(AnnotationTarget.FUNCTION)
 annotation class NavGraphDestination(
     val route: String,
     val deeplink: Array<String> = [],

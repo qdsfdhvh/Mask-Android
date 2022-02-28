@@ -22,6 +22,7 @@ package com.dimension.maskbook.common.routeProcessor
 
 import com.dimension.maskbook.common.routeProcessor.annotations.Back
 import com.dimension.maskbook.common.routeProcessor.annotations.Finish
+import com.dimension.maskbook.common.routeProcessor.annotations.GeneratedFunction
 import com.dimension.maskbook.common.routeProcessor.annotations.NavGraphDestination
 import com.dimension.maskbook.common.routeProcessor.annotations.Navigate
 import com.dimension.maskbook.common.routeProcessor.annotations.Path
@@ -40,6 +41,7 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.asTypeName
@@ -51,7 +53,6 @@ import com.squareup.kotlinpoet.ksp.writeTo
 import com.squareup.kotlinpoet.withIndent
 
 private val navControllerType = ClassName("androidx.navigation", "NavController")
-private const val navControllerName = "controller"
 private const val onFinishName = "onFinish"
 
 private const val argumentsNulNullFormat = "val %N = it.arguments!!.get(%S) as %T"
@@ -63,45 +64,54 @@ internal class RouteGraphProcessor(
 ) : SymbolProcessor {
     override fun process(resolver: Resolver): List<KSAnnotated> {
         val symbols = resolver
-            .getSymbolsWithAnnotation(
-                NavGraphDestination::class.qualifiedName
-                    ?: throw CloneNotSupportedException("Can not get qualifiedName for RouteGraphDestination")
-            ).filterIsInstance<KSFunctionDeclaration>().toList()
-        val ret = symbols.filter {
-            try {
-                it.getAnnotationsByType(NavGraphDestination::class).first().route
-                false
-            } catch (e: Throwable) {
+            .getSymbolsWithAnnotation(requireNotNull(NavGraphDestination::class.qualifiedName))
+            .filterIsInstance<KSFunctionDeclaration>()
+
+        val generatedFunctionSymbols = resolver
+            .getSymbolsWithAnnotation(requireNotNull(GeneratedFunction::class.qualifiedName))
+            .filterIsInstance<KSFunctionDeclaration>()
+
+        fun checkValidRoute(symbol: KSFunctionDeclaration): Boolean {
+            return try {
+                symbol.getAnnotationsByType(NavGraphDestination::class).first().route
                 true
+            } catch (e: Throwable) {
+                false
             }
         }
 
-        val actualSymbols = symbols - ret.toSet()
-        actualSymbols.groupBy {
-            it.getAnnotationsByType(NavGraphDestination::class).first().generatedFunctionName
-        }.forEach { (name, items) ->
-            generateRoute(items, name)
+        if (symbols.any { !checkValidRoute(it) }) {
+            return (symbols + generatedFunctionSymbols).toList()
         }
-        return ret
+
+        generatedFunctionSymbols.forEach { generatedFunction ->
+            generateRoute(symbols.toList(), generatedFunction)
+        }
+        return symbols.toList()
     }
 
-    private fun generateRoute(data: List<KSFunctionDeclaration>, generatedFunctionName: String) {
-        if (data.isEmpty()) {
-            return
-        }
+    private fun generateRoute(data: List<KSFunctionDeclaration>, generatedFunction: KSFunctionDeclaration) {
         val dependencies = Dependencies(
             true,
             *(data.mapNotNull { it.containingFile }).toTypedArray()
         )
-        val packageName = data.first().packageName
+
+        val navControllerName = generatedFunction.parameters.find {
+            it.type.toTypeName() == navControllerType
+        }?.name?.getShortName()
+        requireNotNull(navControllerName) { "not find navController in parameters" }
+
+        val packageName = generatedFunction.packageName
         FileSpec.builder(packageName.asString(), "RouteGraph")
             .addImport("androidx.navigation", "NavType")
             .addImport("androidx.navigation", "navDeepLink")
             .addImport("androidx.navigation", "navArgument")
             .also { fileBuilder ->
                 fileBuilder.addFunction(
-                    FunSpec.builder(generatedFunctionName)
-                        .receiver(ClassName("androidx.navigation", "NavGraphBuilder"))
+                    FunSpec.builder(generatedFunction.simpleName.getShortName())
+                        .addModifiers(KModifier.ACTUAL)
+                        .receiver(requireNotNull(generatedFunction.extensionReceiver?.toTypeName()))
+                        // .addParameters(generatedFunction.parameters)
                         .addParameter(
                             navControllerName,
                             navControllerType,
@@ -109,7 +119,7 @@ internal class RouteGraphProcessor(
                         .addParameter(
                             ParameterSpec
                                 .builder(onFinishName, LambdaTypeName.get(returnType = Unit::class.asTypeName()))
-                                .defaultValue("{ %N.navigateUp() }", navControllerName)
+                                // .defaultValue("{ %N.navigateUp() }", navControllerName)
                                 .build()
                         )
                         .also { builder ->

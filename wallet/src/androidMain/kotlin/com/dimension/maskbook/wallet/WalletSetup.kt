@@ -22,8 +22,6 @@ package com.dimension.maskbook.wallet
 
 import android.content.Context
 import android.net.Uri
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
 import androidx.room.Room
 import com.dimension.maskbook.common.ModuleSetup
 import com.dimension.maskbook.common.ui.tab.TabScreen
@@ -46,7 +44,6 @@ import com.dimension.maskbook.wallet.repository.WalletContactRepository
 import com.dimension.maskbook.wallet.repository.WalletRepository
 import com.dimension.maskbook.wallet.repository.walletDataStore
 import com.dimension.maskbook.wallet.services.WalletServices
-import com.dimension.maskbook.wallet.ui.scenes.generatedRoute
 import com.dimension.maskbook.wallet.ui.tab.WalletTabScreen
 import com.dimension.maskbook.wallet.viewmodel.WelcomeViewModel
 import com.dimension.maskbook.wallet.viewmodel.recovery.IdentityViewModel
@@ -100,10 +97,6 @@ import org.koin.mp.KoinPlatformTools
 import com.dimension.maskbook.wallet.export.WalletServices as ExportWalletServices
 
 object WalletSetup : ModuleSetup {
-
-    override fun NavGraphBuilder.route(navController: NavController, onFinish: () -> Unit) {
-        generatedRoute(navController, onFinish = onFinish)
-    }
 
     override fun dependencyInject() = module {
         single {

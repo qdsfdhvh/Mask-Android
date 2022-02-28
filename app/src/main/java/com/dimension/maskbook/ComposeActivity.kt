@@ -40,18 +40,17 @@ import coil.ImageLoader
 import coil.compose.LocalImageLoader
 import coil.decode.SvgDecoder
 import com.dimension.maskbook.common.navHostAnimationDurationMillis
-import com.dimension.maskbook.common.route
 import com.dimension.maskbook.common.route.CommonRoute
 import com.dimension.maskbook.common.ui.LocalRootNavController
 import com.dimension.maskbook.common.ui.theme.MaskTheme
 import com.dimension.maskbook.common.ui.theme.modalScrimColor
 import com.dimension.maskbook.common.ui.widget.LocalWindowInsetsController
 import com.dimension.maskbook.common.ui.widget.rememberMaskBottomSheetNavigator
-import com.dimension.maskbook.labs.LabsSetup
-import com.dimension.maskbook.persona.PersonaSetup
-import com.dimension.maskbook.setting.SettingSetup
-import com.dimension.maskbook.wallet.WalletSetup
+import com.dimension.maskbook.labs.route.generatedLabsRoute
+import com.dimension.maskbook.persona.route.generatedPersonaRoute
+import com.dimension.maskbook.setting.route.generatedSettingRoute
 import com.dimension.maskbook.wallet.route.WalletRoute
+import com.dimension.maskbook.wallet.route.generatedWalletRoute
 import com.google.accompanist.insets.ProvideWindowInsets
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
@@ -152,10 +151,10 @@ fun App(
                     )
                 },
             ) {
-                WalletSetup.route(this, navController = navController, onFinish = onFinish)
-                LabsSetup.route(this, navController = navController, onFinish = onFinish)
-                PersonaSetup.route(this, navController = navController, onFinish = onFinish)
-                SettingSetup.route(this, navController = navController, onFinish = onFinish)
+                generatedWalletRoute(navController, onFinish)
+                generatedLabsRoute(navController, onFinish)
+                generatedPersonaRoute(navController, onFinish)
+                generatedSettingRoute(navController, onFinish)
             }
         }
     }

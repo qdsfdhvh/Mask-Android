@@ -20,17 +20,12 @@
  */
 package com.dimension.maskbook.common
 
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
 import com.dimension.maskbook.common.util.BiometricAuthenticator
 import com.dimension.maskbook.common.viewmodel.BiometricEnableViewModel
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 
 object CommonSetup : ModuleSetup {
-
-    override fun NavGraphBuilder.route(navController: NavController, onFinish: () -> Unit) {
-    }
 
     override fun dependencyInject() = module {
         single {

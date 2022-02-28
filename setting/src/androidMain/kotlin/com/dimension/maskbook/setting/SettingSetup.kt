@@ -21,8 +21,6 @@
 package com.dimension.maskbook.setting
 
 import android.content.Context
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
 import com.dimension.maskbook.common.ModuleSetup
 import com.dimension.maskbook.common.retrofit.retrofit
 import com.dimension.maskbook.common.ui.tab.TabScreen
@@ -33,7 +31,6 @@ import com.dimension.maskbook.setting.export.SettingServices
 import com.dimension.maskbook.setting.repository.BackupRepository
 import com.dimension.maskbook.setting.repository.ISettingsRepository
 import com.dimension.maskbook.setting.repository.SettingsRepository
-import com.dimension.maskbook.setting.route.generatedRoute
 import com.dimension.maskbook.setting.services.BackupServices
 import com.dimension.maskbook.setting.ui.tab.SettingsTabScreen
 import com.dimension.maskbook.setting.viewmodel.AppearanceSettingsViewModel
@@ -55,9 +52,6 @@ import org.koin.dsl.module
 import org.koin.mp.KoinPlatformTools
 
 object SettingSetup : ModuleSetup {
-    override fun NavGraphBuilder.route(navController: NavController, onFinish: () -> Unit) {
-        generatedRoute(navController, onFinish = onFinish)
-    }
 
     override fun dependencyInject() = module {
         single<BackupServices> {
@@ -67,7 +61,12 @@ object SettingSetup : ModuleSetup {
             SettingsRepository(get(), get(), get())
         }
         single { BackupRepository(get(), get<Context>().cacheDir, get<Context>().contentResolver) }
-        single<SettingServices> { SettingServicesImpl(get(), get()) } bind com.dimension.maskbook.setting.export.BackupServices::class
+        single<SettingServices> {
+            SettingServicesImpl(
+                get(),
+                get()
+            )
+        } bind com.dimension.maskbook.setting.export.BackupServices::class
         single { SettingsTabScreen() } bind TabScreen::class
         single { JSDataSource() }
         single { SettingDataSource(get<Context>().settingsDataStore) }
