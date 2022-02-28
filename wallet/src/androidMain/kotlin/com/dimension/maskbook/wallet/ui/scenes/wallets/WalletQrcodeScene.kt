@@ -122,23 +122,23 @@ fun WalletQrcodeScene(
                                 .padding(25.dp)
                                 .aspectRatio(1f)
                         ) {
-                           if (address.isNotEmpty()) {
-                               val bitmap = remember(address) {
-                                   val barcodeEncoder = BarcodeEncoder()
-                                   barcodeEncoder.encodeBitmap(
-                                       address,
-                                       BarcodeFormat.QR_CODE,
-                                       400,
-                                       400
-                                   )
-                               }
-                               Image(
-                                   bitmap = bitmap.asImageBitmap(),
-                                   contentDescription = null,
-                                   modifier = Modifier.fillMaxSize(),
-                                   contentScale = ContentScale.FillWidth,
-                               )
-                           }
+                            if (address.isNotEmpty()) {
+                                val bitmap = remember(address) {
+                                    val barcodeEncoder = BarcodeEncoder()
+                                    barcodeEncoder.encodeBitmap(
+                                        address,
+                                        BarcodeFormat.QR_CODE,
+                                        400,
+                                        400
+                                    )
+                                }
+                                Image(
+                                    bitmap = bitmap.asImageBitmap(),
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.FillWidth,
+                                )
+                            }
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
