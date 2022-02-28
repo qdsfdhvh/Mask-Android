@@ -11,13 +11,14 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                implementation(projects.common)
+
                 implementation(projects.common.routeProcessor.annotations)
                 kspAndroid(projects.common.routeProcessor)
             }
         }
         val androidMain by getting {
             dependencies {
-                implementation(projects.common)
                 implementation(projects.common.retrofit)
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${Versions.Kotlin.serialization}")
             }

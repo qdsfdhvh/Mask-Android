@@ -20,8 +20,8 @@
  */
 package com.dimension.maskbook.persona.route
 
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
+import com.dimension.maskbook.common.route.NavController
+import com.dimension.maskbook.common.route.NavGraphBuilder
 import com.dimension.maskbook.common.routeProcessor.annotations.GeneratedFunction
 
 @GeneratedFunction

@@ -11,6 +11,8 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
+                implementation(projects.common)
+
                 implementation(projects.common.routeProcessor.annotations)
                 kspAndroid(projects.common.routeProcessor)
             }
@@ -24,7 +26,6 @@ kotlin {
                 implementation("io.github.dimensiondev:maskwalletcore:${Versions.maskWalletCore}")
 
                 implementation(projects.debankapi)
-                implementation(projects.common)
                 implementation(projects.common.retrofit)
                 implementation(projects.common.okhttp)
                 implementation(projects.common.bigDecimal)

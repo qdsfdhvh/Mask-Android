@@ -18,14 +18,7 @@
  *  You should have received a copy of the GNU Affero General Public License
  *  along with Mask-Android.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.dimension.maskbook.wallet.route
+package com.dimension.maskbook.common.route
 
-import com.dimension.maskbook.common.route.NavController
-import com.dimension.maskbook.common.route.NavGraphBuilder
-import com.dimension.maskbook.common.routeProcessor.annotations.GeneratedFunction
-
-@GeneratedFunction
-expect fun NavGraphBuilder.generatedWalletRoute(
-    navController: NavController,
-    onFinish: () -> Unit,
-)
+expect class NavController
+expect class NavGraphBuilder

@@ -38,13 +38,12 @@ import com.google.devtools.ksp.processing.SymbolProcessor
 import com.google.devtools.ksp.symbol.KSAnnotated
 import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.validate
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterSpec
-import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.ksp.KotlinPoetKspPreview
 import com.squareup.kotlinpoet.ksp.toClassName
@@ -53,6 +52,8 @@ import com.squareup.kotlinpoet.ksp.writeTo
 import com.squareup.kotlinpoet.withIndent
 
 private val navControllerType = ClassName("androidx.navigation", "NavController")
+private val commonNavControllerType = ClassName("com.dimension.maskbook.common.route", "NavController")
+
 private const val onFinishName = "onFinish"
 
 private const val argumentsNulNullFormat = "val %N = it.arguments!!.get(%S) as %T"
@@ -87,7 +88,7 @@ internal class RouteGraphProcessor(
         generatedFunctionSymbols.forEach { generatedFunction ->
             generateRoute(symbols.toList(), generatedFunction)
         }
-        return symbols.toList()
+        return (symbols + generatedFunctionSymbols).filter { !it.validate() }.toList()
     }
 
     private fun generateRoute(data: List<KSFunctionDeclaration>, generatedFunction: KSFunctionDeclaration) {
@@ -97,7 +98,7 @@ internal class RouteGraphProcessor(
         )
 
         val navControllerName = generatedFunction.parameters.find {
-            it.type.toTypeName() == navControllerType
+            it.type.toTypeName() == commonNavControllerType
         }?.name?.getShortName()
         requireNotNull(navControllerName) { "not find navController in parameters" }
 
@@ -111,16 +112,10 @@ internal class RouteGraphProcessor(
                     FunSpec.builder(generatedFunction.simpleName.getShortName())
                         .addModifiers(KModifier.ACTUAL)
                         .receiver(requireNotNull(generatedFunction.extensionReceiver?.toTypeName()))
-                        // .addParameters(generatedFunction.parameters)
-                        .addParameter(
-                            navControllerName,
-                            navControllerType,
-                        )
-                        .addParameter(
-                            ParameterSpec
-                                .builder(onFinishName, LambdaTypeName.get(returnType = Unit::class.asTypeName()))
-                                // .defaultValue("{ %N.navigateUp() }", navControllerName)
-                                .build()
+                        .addParameters(
+                            generatedFunction.parameters.map {
+                                ParameterSpec(it.name?.getShortName().orEmpty(), it.type.toTypeName())
+                            }
                         )
                         .also { builder ->
                             data.forEach { ksFunctionDeclaration ->
@@ -130,11 +125,9 @@ internal class RouteGraphProcessor(
                                         ksFunctionDeclaration.simpleName.asString()
                                     )
                                 }
-                                val annotation =
-                                    ksFunctionDeclaration.getAnnotationsByType(
-                                        NavGraphDestination::class
-                                    )
-                                        .first()
+                                val annotation = ksFunctionDeclaration
+                                    .getAnnotationsByType(NavGraphDestination::class)
+                                    .first()
                                 fileBuilder.addImport(
                                     annotation.packageName,
                                     annotation.functionName
